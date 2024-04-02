@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link href="../static/content/bootstrap.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="container ">
+        <a href="/login" class="btn btn-success">Login</a>
+        <div class="col-4">
+            <video style="border-radius:50%" id="video" width="320" height="320" autoplay></video>
+            <label>username</label>
+            <input class="form-control" name="txtusername" id="txtusername" />
+            <button class="btn btn-primary" id="start-camera">Open Camera</button>
+        </div>
+        <div class="form-group" style="margin-top:20px">
+            <button id="start-record" class="btn btn-success">Start Recording</button>
+            <button id="stop-record" class="btn btn-danger">Stop Recording</button>
+            <a id="download-video" class="btn btn-warning" download="test.webm">Download Video</a>
+        </div>
+        <label id="lbl1"></label>
+
+    </div>
+    <script>
+        let camera_button = document.querySelector('#start-camera')
+        let video = document.querySelector('#video')
+        let start_button = document.querySelector('#start-record')
+        let stop_button = document.querySelector('#stop-record')
+        let download_link = document.querySelector('#download-video')
+        let lbl1 = document.querySelector('#lbl1')
+        let txtusername = document.querySelector('#txtusername')
+        let camera_stream = null
+        let media_recorder = null
+        let blobs_recorded = [];
+        camera_button.addEventListener('click', async function () {
+            camera_stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            video.srcObject = camera_stream;
+        });
+
+        start_button.addEventListener('click', function () {
+            lbl1.innerHTML = "Recording....."
+            // set MIME type of recording as video/webm
+            media_recorder = new MediaRecorder(camera_stream, { mimeType: 'video/webm' });
+
+            // event : new recorded video blob available
+            media_recorder.addEventListener('dataavailable', function (e) {
+                blobs_recorded.push(e.data);
+            });
+
+            // event : recording stopped & all blobs sent
+            media_recorder.addEventListener('stop', function () {
+                // create local object URL from the recorded video blobs
+                alert(blobs_recorded)
+                //let video_local = URL.createObjectURL(new Blob(blobs_recorded, { type: 'video/webm' }));
+                var b = new Blob(blobs_recorded, { type: 'video/webm' })
+                alert(b)
+                //fetch(video_local).then(x => x.json())
+                //    .then(x => {
+                //            alert(JSON.stringify(x))
+                //    })
+                var reader = new FileReader()
+                reader.readAsDataURL(b) //video_local)
+                var formdata = new FormData
+                reader.onloadend = x => {
+                    alert('onload end')
+                    alert(reader.result)  //x.target.result)
+                    fetch('/UploadVideoFileForLogin', {
+                        method: 'post',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({
+                            video: reader.result,
+                            username : txtusername.value
+                            })
+                        })
+                }
+                //download_link.href = video_local;
+            });
+
+            // start recording with each recorded blob having 1 second video
+            media_recorder.start(1000);
+        });
+
+
+        stop_button.addEventListener('click', function () {
+            lbl1.innerHTML = "Record stoped and stored in memory. click Download button to download it....."
+            media_recorder.stop();
+        })
+
+
+
+
+
+
+
+
+
+    </script>
+
+</body>
+</html>

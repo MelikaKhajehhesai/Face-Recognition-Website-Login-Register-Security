@@ -1,0 +1,44 @@
+
+<html>
+<head>
+</head>
+<body>
+    <h1>Webcam Test</h1>
+
+    <div>
+        <video id="vid"></video>
+        <button id="but"> Show Image</button>
+        <video id="vid2" width="150"></video>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            let but = document.getElementById('but')
+            let video = document.getElementById('vid')
+            let video2 = document.getElementById('vid2')
+            let mediaDevices = navigator.mediaDevices
+            video.muted = true
+            but.addEventListener('click', () => {
+                mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                })
+                    .then((stream) => {
+                        alert(stream)
+                        video.srcObject = stream
+                        video.addEventListener("loadedmetadata", () => {
+                            video.play()
+                        })
+
+                        //video2.srcObject = stream
+                        //video2.addEventListener("loadedmetadata", () => {
+                        //    video2.play()
+                        //})
+                    }).catch(alert)
+            })
+        })
+        //var mediaDevices = navigator.mediaDevices;
+
+    </script>
+</body>
+</html>
